@@ -23,12 +23,12 @@ enum Code
 
 class Modifier 
 {
-private:
-	Code code;
+	private:
+		Code code;
 
-public:
-	Modifier(Code pCode) : code(pCode) {}
-	friend std::ostream& operator<<(std::ostream& os, const Modifier& mod) { return os << "\033[" << mod.code << "m"; }
+	public:
+		Modifier(Code pCode) : code(pCode) {}
+		friend std::ostream& operator<<(std::ostream& os, const Modifier& mod) { return os << "\033[" << mod.code << "m"; }
 };
 
 const std::string FS_NAME = "magmorOS";
