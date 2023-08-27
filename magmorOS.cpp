@@ -7,7 +7,31 @@
 #include <vector>
 #include <iomanip>
 
-const std::string FS_NAME = "myfs";
+enum Code 
+{
+	FG_RED      = 31,
+	FG_GREEN    = 32,
+	FG_BLUE     = 34,
+	FG_CYAN     = 36,
+	FG_DEFAULT  = 39,
+	BG_RED      = 41,
+	BG_GREEN    = 42,
+	BG_BLUE     = 44,
+	FD_PINK     = 91,
+	BG_DEFAULT  = 49
+};
+
+class Modifier 
+{
+private:
+	Code code;
+
+public:
+	Modifier(Code pCode) : code(pCode) {}
+	friend std::ostream& operator<<(std::ostream& os, const Modifier& mod) { return os << "\033[" << mod.code << "m"; }
+};
+
+const std::string FS_NAME = "magmorOS";
 
 const std::string LIST_CMD = "ls";
 const std::string CONTENT_CMD = "cat";
@@ -27,7 +51,8 @@ const std::string HELP_STRING = "The following commands are supported: \n"
 	+ HELP_CMD + " - show this help messege. \n"
 	+ EXIT_CMD + " - gracefully exit. \n";
 
-std::vector<std::string> split_cmd(std::string cmd) {
+std::vector<std::string> split_cmd(std::string cmd)
+{
 	std::stringstream ss(cmd);
 	std::string part;
 	std::vector<std::string> ans;
@@ -38,110 +63,160 @@ std::vector<std::string> split_cmd(std::string cmd) {
 	return ans;
 }
 
-static void recursive_print(MyFs &myfs, std::string path, std::string prefix="") {
+static void recursive_print(MyFs &myfs, std::string path, std::string prefix="")
+{
 	MyFs::dir_list dlist = myfs.list_dir(path);
-	for (size_t i=0; i < dlist.size(); i++) {
+	for (size_t i=0; i < dlist.size(); i++) 
+	{
 		MyFs::dir_list_entry &curr_entry = dlist[i];
-
 		std::string entry_prefix = prefix;
+
 		if (i == dlist.size()-1)
 			entry_prefix += "└── ";
+
 		else
 			entry_prefix += "├── ";
 
 		std::cout << entry_prefix << curr_entry.name << std::endl;
 
-		if (curr_entry.is_dir) {
+		if (curr_entry.is_dir)
+		{
 			std::string dir_prefix = prefix;
 
 			if (i == dlist.size()-1)
 				dir_prefix += "    ";
+
 			else
 				dir_prefix += "│   ";
+
 			recursive_print(myfs, path + "/" + curr_entry.name, dir_prefix);
 		}
 	}
 }
 
-int main(int argc, char **argv) {
 
-	if (argc != 2) {
-		std::cerr << "Please provide the file to operate on" << std::endl;
+int main(int argc, char **argv)
+{
+
+	if (argc != 4) 
+	{
+		std::cerr << "Usage: ./magmorOS <BlockDeviceFile> <username> <password>" << std::endl;
 		return -1;
 	}
 
+	Modifier red(FG_RED);
+	Modifier cyan(FG_CYAN);
+	Modifier green(BG_GREEN);
+	Modifier def(FG_DEFAULT);
+	Modifier pink(FD_PINK);
+
 	BlockDeviceSimulator *blkdevptr = new BlockDeviceSimulator(argv[1]);
+	std::string username = argv[2];
+	std::string password = argv[3];
+
 	MyFs myfs(blkdevptr);
 	bool exit = false;
+	std::string currentDir = "/";
 
-	std::cout << "Welcome to " << FS_NAME << std::endl;
-	std::cout << "To get help, please type 'help' on the prompt below." << std::endl;
+	std::cout << "Welcome to magmorOS" << std::endl;
+	std::cout << "enter 'help' for supported commands";
 	std::cout << std::endl;
 
-	while (!exit) {
-		try {
+	while (!exit) 
+	{
+		try 
+		{
 			std::string cmdline;
-			std::cout << FS_NAME << "$ ";
+			std::cout << cyan << username << "@" << "hostname" << def << ":" << pink << currentDir << def << "$ ";
 			std::getline(std::cin, cmdline, '\n');
+
 			if (cmdline == std::string(""))
 				continue;
 
 			std::vector<std::string> cmd = split_cmd(cmdline);
 
-			if (cmd[0] == LIST_CMD) {
+			if (cmd[0] == LIST_CMD) 
+			{
 				MyFs::dir_list dlist;
 				if (cmd.size() == 1)
 					dlist = myfs.list_dir("/");
+
 				else if (cmd.size() == 2)
 					dlist = myfs.list_dir(cmd[1]);
+
 				else
 					std::cout << LIST_CMD << ": one or zero arguments requested" << std::endl;
 
-				for (size_t i=0; i < dlist.size(); i++) {
+				for (size_t i = 0; i < dlist.size(); i++) 
+				{
 					std::cout << std::setw(15) << std::left
 						<< dlist[i].name + (dlist[i].is_dir ? "/":"")
 						<< std::setw(10) << std::right
 						<< dlist[i].file_size << std::endl;
 				}
-			} else if (cmd[0] == EXIT_CMD) {
+			} 
+			else if (cmd[0] == "^[[A")
+				std::cout	<< "banana";
+			else if (cmd[0] == EXIT_CMD) 
 				exit = true;
-			} else if (cmd[0] == HELP_CMD) {
+
+			else if (cmd[0] == HELP_CMD) 
 				std::cout << HELP_STRING;
-			} else if (cmd[0] == CREATE_FILE_CMD) {
+
+			else if (cmd[0] == CREATE_FILE_CMD) 
+			{
 				if (cmd.size() == 2)
 					myfs.create_file(cmd[1], false);
+
 				else
 					std::cout << CREATE_FILE_CMD << ": file path requested" << std::endl;
-			} else if (cmd[0] == CONTENT_CMD) {
+			} 
+			else if (cmd[0] == CONTENT_CMD) 
+			{
 				if (cmd.size() == 2)
 					std::cout << myfs.get_content(cmd[1]) << std::endl;
+
 				else
 					std::cout << CONTENT_CMD << ": file path requested" << std::endl;
-			} else if (cmd[0] == TREE_CMD) {
+			} 
+			else if (cmd[0] == TREE_CMD)
 				recursive_print(myfs, "");
-			} else if (cmd[0] == EDIT_CMD) {
-				if (cmd.size() == 2) {
+
+			else if (cmd[0] == EDIT_CMD) 
+			{
+				if (cmd.size() == 2) 
+				{
 					std::cout << "Enter new file content" << std::endl;
 					std::string content;
 					std::string curr_line;
 					std::getline(std::cin, curr_line);
-					while (curr_line != "") {
+					while (curr_line != "") 
+					{
 						content += curr_line + "\n";
 						std::getline(std::cin, curr_line);
 					}
 					myfs.set_content(cmd[1], content);
-				} else {
+				} 
+				else 
 					std::cout << EDIT_CMD << ": file path requested" << std::endl;
-				}
-			} else if (cmd[0] == CREATE_DIR_CMD) {
+			} 
+			else if (cmd[0] == CREATE_DIR_CMD)
+			{
 				if (cmd.size() == 2)
 					myfs.create_file(cmd[1], true);
+
 				else
 					std::cout << CREATE_DIR_CMD << ": one argument requested" << std::endl;
-			} else {
-				std::cout << "unknown command: " << cmd[0] << std::endl;
 			}
-		} catch (std::runtime_error &e) {
+			else if (cmd[0] == "^[[A")
+				std::cout	<< "banana";
+			else
+				std::cout << cmd[0] << ": command not found" << std::endl;
+			
+
+		} 
+		catch (std::runtime_error &e) 
+		{
 			std::cout << e.what() << std::endl;
 		}
 	}

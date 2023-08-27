@@ -3,8 +3,10 @@
 
 #include <string>
 
-class BlockDeviceSimulator {
+class BlockDeviceSimulator 
+{
 public:
+
 	BlockDeviceSimulator(std::string fname);
 	~BlockDeviceSimulator();
 
