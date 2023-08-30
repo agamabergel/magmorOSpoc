@@ -1,4 +1,5 @@
 #include "blkdev.h"
+#include "helper.h"
 #include "myfs.h"
 #include <iostream>
 #include <memory>
@@ -6,20 +7,6 @@
 #include <string>
 #include <vector>
 #include <iomanip>
-
-enum Code 
-{
-	FG_RED      = 31,
-	FG_GREEN    = 32,
-	FG_BLUE     = 34,
-	FG_CYAN     = 36,
-	FG_DEFAULT  = 39,
-	BG_RED      = 41,
-	BG_GREEN    = 42,
-	BG_BLUE     = 44,
-	FD_PINK     = 91,
-	BG_DEFAULT  = 49
-};
 
 class Modifier 
 {
@@ -30,70 +17,6 @@ class Modifier
 		Modifier(Code pCode) : code(pCode) {}
 		friend std::ostream& operator<<(std::ostream& os, const Modifier& mod) { return os << "\033[" << mod.code << "m"; }
 };
-
-const std::string FS_NAME = "magmorOS";
-
-const std::string LIST_CMD = "ls";
-const std::string CONTENT_CMD = "cat";
-const std::string CREATE_FILE_CMD = "touch";
-const std::string CREATE_DIR_CMD = "mkdir";
-const std::string EDIT_CMD = "edit";
-const std::string TREE_CMD = "tree";
-const std::string HELP_CMD = "help";
-const std::string EXIT_CMD = "exit";
-
-const std::string HELP_STRING = "The following commands are supported: \n"
-	+ LIST_CMD + " [<directory>] - list directory content. \n"
-	+ CONTENT_CMD + " <path> - show file content. \n"
-	+ CREATE_FILE_CMD + " <path> - create empty file. \n"
-	+ CREATE_DIR_CMD + " <path> - create empty directory. \n"
-	+ EDIT_CMD + " <path> - re-set file content. \n"
-	+ HELP_CMD + " - show this help messege. \n"
-	+ EXIT_CMD + " - gracefully exit. \n";
-
-std::vector<std::string> split_cmd(std::string cmd)
-{
-	std::stringstream ss(cmd);
-	std::string part;
-	std::vector<std::string> ans;
-
-	while (std::getline(ss, part, ' '))
-		ans.push_back(part);
-
-	return ans;
-}
-
-static void recursive_print(MyFs &myfs, std::string path, std::string prefix="")
-{
-	MyFs::dir_list dlist = myfs.list_dir(path);
-	for (size_t i=0; i < dlist.size(); i++) 
-	{
-		MyFs::dir_list_entry &curr_entry = dlist[i];
-		std::string entry_prefix = prefix;
-
-		if (i == dlist.size()-1)
-			entry_prefix += "└── ";
-
-		else
-			entry_prefix += "├── ";
-
-		std::cout << entry_prefix << curr_entry.name << std::endl;
-
-		if (curr_entry.is_dir)
-		{
-			std::string dir_prefix = prefix;
-
-			if (i == dlist.size()-1)
-				dir_prefix += "    ";
-
-			else
-				dir_prefix += "│   ";
-
-			recursive_print(myfs, path + "/" + curr_entry.name, dir_prefix);
-		}
-	}
-}
-
 
 int main(int argc, char **argv)
 {
@@ -127,13 +50,13 @@ int main(int argc, char **argv)
 		try 
 		{
 			std::string cmdline;
-			std::cout << cyan << username << "@" << "hostname" << def << ":" << pink << currentDir << def << "$ ";
+			std::cout << cyan << username << "@" << "host" << def << ":" << pink << currentDir << def << "$ ";
 			std::getline(std::cin, cmdline, '\n');
 
 			if (cmdline == std::string(""))
 				continue;
 
-			std::vector<std::string> cmd = split_cmd(cmdline);
+			std::vector<std::string> cmd = Helper::split_cmd(cmdline);
 
 			if (cmd[0] == LIST_CMD) 
 			{
@@ -155,8 +78,9 @@ int main(int argc, char **argv)
 						<< dlist[i].file_size << std::endl;
 				}
 			} 
-			else if (cmd[0] == "^[[A")
-				std::cout	<< "banana";
+			else if (cmd[0] == "quit")
+				std::cout	<< "exit out from os via `exit` command." << std::endl;
+
 			else if (cmd[0] == EXIT_CMD) 
 				exit = true;
 
@@ -180,7 +104,7 @@ int main(int argc, char **argv)
 					std::cout << CONTENT_CMD << ": file path requested" << std::endl;
 			} 
 			else if (cmd[0] == TREE_CMD)
-				recursive_print(myfs, "");
+				Helper::recursive_print(myfs, "", "");
 
 			else if (cmd[0] == EDIT_CMD) 
 			{
@@ -210,6 +134,7 @@ int main(int argc, char **argv)
 			}
 			else if (cmd[0] == "^[[A")
 				std::cout	<< "banana";
+			
 			else
 				std::cout << cmd[0] << ": command not found" << std::endl;
 			
