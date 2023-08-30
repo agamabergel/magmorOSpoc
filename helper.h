@@ -41,13 +41,13 @@ enum Code
 	FD_PINK     = 91,
 	BG_DEFAULT  = 49
 };
+
 class Helper
 {
 public:
     static std::vector<std::string> split_cmd(std::string cmd);
     static void recursive_print(MyFs &myfs, std::string path, std::string prefix);
 };
-
 
 
 #endif 
