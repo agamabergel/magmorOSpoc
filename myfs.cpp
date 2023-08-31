@@ -10,12 +10,14 @@ MyFs::MyFs(BlockDeviceSimulator *blkdevsim_):blkdevsim(blkdevsim_)
 {
 	struct myfs_header header;
 	blkdevsim->read(0, sizeof(header), (char *)&header);
+	
+	std::cout << "os booted with 1024^2 bytes." << std::endl;
 
 	if (strncmp(header.magic, MYFS_MAGIC, sizeof(header.magic)) != 0 || (header.version != CURR_VERSION)) 
-	{
 		format();
-		std::cout << "os booted with 1024^2 bytes." << std::endl;
-	}
+
+	else
+		blkdevsim->read(NODES_START, sizeof(header), (char *)&nodes);
 }
 
 void MyFs::format() 
@@ -26,7 +28,9 @@ void MyFs::format()
 	strncpy(header.magic, MYFS_MAGIC, sizeof(header.magic));
 	header.version = CURR_VERSION;
 	blkdevsim->write(0, sizeof(header), (const char*)&header);
-	//blkdevsim
+	memset(nodes.indoes, 0, sizeof(nodes.indoes));
+	nodes.currEmptyLoc = DATA_START;
+	nodes.currNode = 0;
 	
 }
 

@@ -6,7 +6,10 @@
 #include <stdint.h>
 #include "blkdev.h"
 
-class MyFs {
+#define PATH_MAX_LEN 256
+
+class MyFs 
+{
 public:
 	MyFs(BlockDeviceSimulator *blkdevsim_);
 
@@ -89,15 +92,36 @@ private:
 	 * instance. Otherwise, the blockdevice is formated and a new instance is
 	 * created.
 	 */
-	struct myfs_header {
+	struct myfs_header
+	{
 		char magic[4];
 		uint8_t version;
 	};
+
+	struct Inode
+	{
+		unsigned int addr;
+		size_t size;
+		unsigned int type;
+		char name[PATH_MAX_LEN];
+		bool isDir;
+	};
+	struct Nodes
+	{
+		int currNode;
+		int currEmptyLoc;
+		struct Inode inodes[256];
+	};
+
+	static const int NODES_START = sizeof(struct myfs_header) + 1;
+	static const int DATA_START = NODES_START + sizeof(struct Nodes) + 1;
 
 	BlockDeviceSimulator *blkdevsim;
 
 	static const uint8_t CURR_VERSION = 0x03;
 	static const char *MYFS_MAGIC;
+	
+	struct Nodes nodes;
 };
 
 #endif // __MYFS_H__
