@@ -18,6 +18,7 @@ public:
 private:
 	int fd;
 	unsigned char *filemap;
+	
 };
 
 #endif // __BLKDEVSIM__H__

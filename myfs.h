@@ -13,13 +13,14 @@ class MyFs
 {
 public:
 	MyFs(BlockDeviceSimulator *blkdevsim_);
-
+	bool loaded;
 	/**
 	 * dir_list_entry struct
 	 * This struct is used by list_dir method to return directory entry
 	 * information.
 	 */
-	struct dir_list_entry {
+	struct dir_list_entry 
+	{
 		/**
 		 * The directory entry name
 		 */
@@ -107,6 +108,7 @@ private:
 		unsigned int type;
 		char name[PATH_MAX_LEN];
 		bool isDir;
+		int st_mode;
 	};
 	struct Nodes
 	{

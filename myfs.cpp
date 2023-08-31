@@ -13,11 +13,15 @@ MyFs::MyFs(BlockDeviceSimulator *blkdevsim_):blkdevsim(blkdevsim_)
 
 	std::cout << "os booted with 1024^2 bytes." << std::endl;
 
-	if (strncmp(header.magic, MYFS_MAGIC, sizeof(header.magic)) != 0 || (header.version != CURR_VERSION)) 
+	if (strncmp(header.magic, MYFS_MAGIC, sizeof(header.magic)) != 0 || (header.version != CURR_VERSION)) {
 		format();
-
-	else
-		blkdevsim->read(NODES_START, sizeof(header), (char *)&nodes);
+		loaded = false;
+	}
+	else {
+		blkdevsim->read(NODES_START, sizeof(nodes), (char *)&nodes);
+		loaded = true;
+	}
+	
 }
 
 void MyFs::format() 
@@ -43,13 +47,13 @@ bool MyFs::checkFilePathExists(std::string path)
 	for (unsigned int i = 0; i < INODES_C; i++)
 		if (strcmp(nodes.inodes[i].name, path.c_str()) == 0) //found
 			return true;
+			
 
 	return false;
 }
 
 void MyFs::create_file(std::string path_str, bool directory) 
 {
-
 	if (checkFilePathExists(path_str))
 		throw std::runtime_error("\n\t[*] a file with that name is already exists! :(\n");
 	
