@@ -7,6 +7,7 @@
 #include "blkdev.h"
 
 #define PATH_MAX_LEN 256
+#define INODES_C 256
 
 class MyFs 
 {
@@ -84,6 +85,7 @@ public:
 
 private:
 
+	bool checkFilePathExists(std::string path);
 	/**
 	 * This struct represents the first bytes of a myfs filesystem.
 	 * It holds some magic characters and a number indicating the version.
@@ -110,7 +112,7 @@ private:
 	{
 		int currNode;
 		int currEmptyLoc;
-		struct Inode inodes[256];
+		struct Inode inodes[INODES_C];
 	};
 
 	static const int NODES_START = sizeof(struct myfs_header) + 1;
