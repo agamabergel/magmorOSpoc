@@ -61,25 +61,63 @@ void MyFs::create_file(std::string path_str, bool directory)
 
 	if (directory)
 		nodes.inodes[nodes.currNode].isDir = true;
-	
+
 	blkdevsim->write(NODES_START, sizeof(this->nodes), (char *)&nodes);
 }
 
 std::string MyFs::get_content(std::string path_str) 
 {
-	throw std::runtime_error("not implemented");
-	return "";
+	for (unsigned int i = 0; i < INODES_C; i++)
+	{
+		if (strcmp(nodes.inodes[i].name, path_str.c_str()) == 0) 
+		{
+			if (nodes.inodes[i].isDir == true)
+				return "cat: " + path_str + "is a directory";
+
+			if (nodes.inodes[i].addr != 0 && nodes.inodes[i].size != 0)
+			{
+				char *data = new char[nodes.inodes[i].size];
+				this->blkdevsim->read(nodes.inodes[i].addr, nodes.inodes[i].size, data);
+				std::string unallocatedData (data);
+				delete data;
+
+				return unallocatedData;
+			}
+			else
+				return "";
+		}
+	}
 }
 
 void MyFs::set_content(std::string path_str, std::string content) 
 {
-	throw std::runtime_error("not implemented");
+	for (unsigned int i = 0; i < INODES_C; i++)
+	{
+		if (strcmp(nodes.inodes[i].name, path_str.c_str()) == 0) //found
+		{
+			nodes.inodes[i].size = content.size() + 1;
+			nodes.currEmptyLoc += content.size() + 2;
+			nodes.inodes[i].addr = nodes.currEmptyLoc;
+			this->blkdevsim->write(nodes.inodes[i].addr, nodes.inodes[i].size, content.c_str());
+			blkdevsim->write(NODES_START, sizeof(this->nodes), (char *)&nodes);
+		}
+	}
 }
 
 MyFs::dir_list MyFs::list_dir(std::string path_str) 
 {
-	dir_list ans;
-	throw std::runtime_error("not implemented");
-	return ans;
+	dir_list dirList;
+	for (unsigned int i = 0; i < INODES_C; i++)
+	{
+		if (nodes.inodes[i].name != std::string(""))
+		{
+			dir_list_entry entry;
+			entry.name = nodes.inodes[i].name;
+			entry.file_size = nodes.inodes[i].size;
+			entry.is_dir = 0;
+			dirList.push_back(entry);
+		}
+	}
+	return dirList;
 }
 
