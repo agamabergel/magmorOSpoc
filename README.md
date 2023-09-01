@@ -1,2 +1,2 @@
 # magmorOS
-Agam and Or's OS!
+Agam and Or's OS poc!
